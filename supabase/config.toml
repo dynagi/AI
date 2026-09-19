@@ -1,0 +1,18 @@
+# Used by the Supabase CLI for LOCAL development (`supabase start`, `supabase db reset`).
+# Hosted projects do not read this file; apply the SQL files as described in the README.
+project_id = "finpilot"
+
+[db]
+major_version = 15
+
+[db.seed]
+enabled = true
+# Dependency order matters (cycles before transactions, etc.).
+sql_paths = [
+  "./seed/demo_user.sql",
+  "./seed/demo_account.sql",
+  "./seed/demo_cycles.sql",
+  "./seed/demo_transactions.sql",
+  "./seed/demo_targets.sql",
+  "./seed/demo_budgets.sql",
+]

@@ -1,0 +1,16 @@
+-- demo_cycles.sql
+-- Six salary-to-salary financial cycles. Five are CLOSED, the last (31 Aug -> next salary) is ACTIVE.
+-- salary_transaction_id is linked at the end of demo_transactions.sql (the salary rows must exist first).
+-- Each cycle starts at the exact timestamp its salary landed (11:27:04 IST).
+
+insert into public.financial_cycles
+  (id, user_id, account_id, start_at, end_at, opening_balance, carried_over_balance, closing_balance,
+   income_total, other_inflow_total, refund_total, expense_total, transaction_count, status)
+values
+  ('cbf491f0-38ed-594f-8825-b91ec5f9df9a', 'a1b2c3d4-0000-4000-8000-000000000001', 'a1b2c3d4-0000-4000-8000-0000000000a1', '2026-03-31 11:27:04+05:30', '2026-04-30 11:27:04+05:30', 135000.00, 35000.00, 35000.00, 100000.00, 0.00, 0.00, 38200.00, 39, 'CLOSED'),
+  ('56a6b6f8-8456-52e3-b391-58167eaca992', 'a1b2c3d4-0000-4000-8000-000000000001', 'a1b2c3d4-0000-4000-8000-0000000000a1', '2026-04-30 11:27:04+05:30', '2026-05-31 11:27:04+05:30', 135000.00, 35000.00, 35000.00, 100000.00, 0.00, 0.00, 41500.00, 39, 'CLOSED'),
+  ('8dbad92d-1cb9-51e7-9970-e591a6f2733f', 'a1b2c3d4-0000-4000-8000-000000000001', 'a1b2c3d4-0000-4000-8000-0000000000a1', '2026-05-31 11:27:04+05:30', '2026-06-30 11:27:04+05:30', 135000.00, 35000.00, 35000.00, 100000.00, 800.00, 0.00, 39800.00, 40, 'CLOSED'),
+  ('1b237208-5a29-5252-b26d-05b1f1e04d80', 'a1b2c3d4-0000-4000-8000-000000000001', 'a1b2c3d4-0000-4000-8000-0000000000a1', '2026-06-30 11:27:04+05:30', '2026-07-31 11:27:04+05:30', 135000.00, 35000.00, 35000.00, 100000.00, 0.00, 0.00, 44100.00, 39, 'CLOSED'),
+  ('15d7f1a6-25de-5a25-a7ed-13af1731e1be', 'a1b2c3d4-0000-4000-8000-000000000001', 'a1b2c3d4-0000-4000-8000-0000000000a1', '2026-07-31 11:27:04+05:30', '2026-08-31 11:27:04+05:30', 135000.00, 35000.00, 35000.00, 100000.00, 0.00, 1299.00, 46200.00, 40, 'CLOSED'),
+  ('5bbf52d1-7f1e-5b75-88ca-18a760f38131', 'a1b2c3d4-0000-4000-8000-000000000001', 'a1b2c3d4-0000-4000-8000-0000000000a1', '2026-08-31 11:27:04+05:30', null, 135000.00, 35000.00, null, 100000.00, 0.00, 0.00, 42500.00, 39, 'ACTIVE')
+on conflict (id) do nothing;

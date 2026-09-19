@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+dist
+.env
+.env.local
+backend/.env
+backend/.venv
+__pycache__
+*.pyc
+.pytest_cache
+*.db
+*.db-journal
+.DS_Store
+npm-debug.log*
+tsconfig.tsbuildinfo
