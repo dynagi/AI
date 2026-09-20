@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Plant, Smile, Sprite } from "@/components/retro/Sprite";
 
 const NAV = [
+  { href: "/guide", label: "User Guide", icon: "📖" },
   { href: "/dashboard", label: "Dashboard", icon: "🏠" },
   { href: "/chat", label: "Ask Penny", icon: "💬" },
   { href: "/transactions", label: "Transactions", icon: "📄" },
@@ -26,7 +27,7 @@ const MENU = [
   { label: "Edit", href: "/transactions?add=1" },
   { label: "View", href: "/dashboard" },
   { label: "Tools", href: "/comparisons" },
-  { label: "Help", href: "/chat" },
+  { label: "Help", href: "/guide" },
 ];
 
 function isActive(pathname: string, href: string) {

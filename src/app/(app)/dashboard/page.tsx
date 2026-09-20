@@ -13,6 +13,7 @@ import StatCard from "@/components/dashboard/StatCard";
 import AlertsPanel from "@/components/dashboard/AlertsPanel";
 import UpcomingCommitments from "@/components/dashboard/UpcomingCommitments";
 import BriefingCard from "@/components/dashboard/BriefingCard";
+import FirstTimeBanner from "@/components/dashboard/FirstTimeBanner";
 import WhatIfCard from "@/components/dashboard/WhatIfCard";
 import SimulatorPanel from "@/components/dashboard/SimulatorPanel";
 import SavingsTargetForm from "@/components/dashboard/SavingsTargetForm";
@@ -41,6 +42,7 @@ export default function DashboardPage() {
   if (!d.account) {
     return (
       <div className="mx-auto max-w-2xl space-y-4">
+        <FirstTimeBanner />
         <h1 className="text-xl font-semibold">Welcome to FinPilot</h1>
         <Card className="p-6">
           <p className="mb-4 text-sm text-muted-foreground">Connect a financial account to automatically import transactions, or add your own.</p>
@@ -127,6 +129,8 @@ export default function DashboardPage() {
               <div className="min-w-0 flex-1"><AlertsPanel alerts={d.alerts ?? []} /></div>
             </div>
           )}
+
+          <FirstTimeBanner />
 
           <BriefingCard />
 
