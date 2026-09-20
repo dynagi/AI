@@ -52,12 +52,16 @@ def connection_candidates(settings: Optional[Settings] = None) -> list[str]:
         raise RuntimeError(f"Database is not configured. {HELP}")
 
     common = dict(dbname="postgres", password=s.supabase_db_password, sslmode="require", connect_timeout=8)
-    out = [make_conninfo(host=f"db.{ref}.supabase.co", port=5432, user="postgres", **common)]
-    if s.supabase_region:
-        for prefix in ("aws-0", "aws-1"):  # older and newer Supabase pooler hostnames
-            out.append(make_conninfo(host=f"{prefix}-{s.supabase_region}.pooler.supabase.com", port=5432,
-                                     user=f"postgres.{ref}", **common))
-    return out
+    direct = make_conninfo(host=f"db.{ref}.supabase.co", port=5432, user="postgres", **common)
+    if not s.supabase_region:
+        return [direct]
+    # A known region means the direct host is not reachable from here (it is IPv6-only): try the pooler first so
+    # a cold start does not wait on it. The direct host stays as the last resort.
+    pooled = [
+        make_conninfo(host=f"{prefix}-{s.supabase_region}.pooler.supabase.com", port=5432, user=f"postgres.{ref}", **common)
+        for prefix in ("aws-0", "aws-1")  # older and newer Supabase pooler hostnames
+    ]
+    return pooled + [direct]
 
 
 # Supabase pooler regions, most likely first for this project's users.

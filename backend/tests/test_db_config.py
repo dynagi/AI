@@ -20,8 +20,9 @@ def test_direct_host_is_derived_from_the_project_url_and_password():
 def test_pooler_candidates_are_added_when_a_region_is_given():
     c = connection_candidates(settings(supabase_url="https://abcdefghij.supabase.co", supabase_db_password="pw", supabase_region="ap-south-1"))
     hosts = [conninfo_to_dict(x)["host"] for x in c]
-    assert hosts == ["db.abcdefghij.supabase.co", "aws-0-ap-south-1.pooler.supabase.com", "aws-1-ap-south-1.pooler.supabase.com"]
-    assert conninfo_to_dict(c[1])["user"] == "postgres.abcdefghij"
+    # with a known region the pooler comes first (the direct host is IPv6-only); the direct host is the last resort
+    assert hosts == ["aws-0-ap-south-1.pooler.supabase.com", "aws-1-ap-south-1.pooler.supabase.com", "db.abcdefghij.supabase.co"]
+    assert conninfo_to_dict(c[0])["user"] == "postgres.abcdefghij"
 
 
 def test_passwords_with_special_characters_need_no_url_encoding():
