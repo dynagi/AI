@@ -9,7 +9,7 @@ export interface ChatMsg {
   content: string;
 }
 
-/** Used by the dashboard "Ask FinPilot.exe" window: same POST /chat endpoint and agent as the chat page. */
+/** Used by the dashboard "Ask Penny.exe" window: same POST /chat endpoint and agent as the chat page. */
 export function useFinPilotChat() {
   const [msgs, setMsgs] = useState<ChatMsg[]>([]);
   const [convId, setConvId] = useState<string | undefined>();

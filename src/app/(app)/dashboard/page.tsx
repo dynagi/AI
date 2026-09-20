@@ -314,7 +314,7 @@ export default function DashboardPage() {
                 <p className="mt-0.5 text-sm text-muted-foreground">{i.message}</p>
               </div>
             ))}
-            <Link href="/chat" className="inline-block text-xs text-primary">Ask FinPilot about this →</Link>
+            <Link href="/chat" className="inline-block text-xs text-primary">Ask Penny about this →</Link>
           </CardContent>
         </Card>
         {me?.demo_mode && <SimulatorPanel accountId={account.id} needsTarget={Boolean(savings?.needs_target)} />}

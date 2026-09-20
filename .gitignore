@@ -15,3 +15,6 @@ __pycache__
 npm-debug.log*
 tsconfig.tsbuildinfo
 .next-test
+
+.vercel
+.env*

@@ -116,7 +116,7 @@ export default function ComparisonsPage() {
             <CardHeader><CardTitle>What explains the difference</CardTitle></CardHeader>
             <CardContent>
               <ul className="list-disc space-y-1.5 pl-5 text-sm">{c.explanation.map((l, i) => <li key={i}>{l}</li>)}</ul>
-              <p className="mt-3 text-xs text-muted-foreground">Generated directly from your transactions (no AI estimation). Ask FinPilot in chat for a deeper walk-through.</p>
+              <p className="mt-3 text-xs text-muted-foreground">Generated directly from your transactions (no AI estimation). Ask Penny in chat for a deeper walk-through.</p>
             </CardContent>
           </Card>
 

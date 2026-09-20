@@ -62,11 +62,14 @@ export default function ChatPage() {
   return (
     <div className="mx-auto flex h-[calc(100vh-9rem)] max-w-3xl flex-col">
       <div className="mb-4">
-        <h1 className="flex items-center gap-2 text-xl font-semibold"><Sparkles className="h-5 w-5 text-primary" /> Ask FinPilot</h1>
-        <p className="text-sm text-muted-foreground">Answers come from tool calls against your own ledger. FinPilot analyses your data; it does not give investment advice.</p>
+        <h1 className="flex items-center gap-2 text-xl font-semibold"><Sparkles className="h-5 w-5 text-primary" /> Ask Penny</h1>
+        <p className="text-sm text-muted-foreground">Answers come from tool calls against your own ledger. Penny analyses your data; she does not give investment advice.</p>
       </div>
 
       <div className="flex-1 space-y-4 overflow-y-auto pr-1">
+        {msgs.length === 0 && (
+          <p className="text-sm">Hi, I&apos;m Penny, FinPilot&apos;s assistant. Ask me anything about your money.</p>
+        )}
         {msgs.length === 0 && (
           <div className="grid gap-2 sm:grid-cols-2">
             {SUGGESTIONS.map((s) => (

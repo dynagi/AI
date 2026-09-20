@@ -133,17 +133,17 @@ export function AskWindow() {
   const [input, setInput] = useState("");
   const submit = (t: string) => { send(t); setInput(""); };
   return (
-    <RetroWindow title="Ask FinPilot.exe" bodyClassName="p-3">
+    <RetroWindow title="Ask Penny.exe" bodyClassName="p-3">
       <div className="mb-2 flex items-end gap-2">
         <Robot />
-        <div className="retro-note p-2 text-xs">Hi! I&apos;m FinPilot.<br />Ask me anything about your money!</div>
+        <div className="retro-note p-2 text-xs">Hi, I&apos;m Penny!<br />Ask me anything about your money.</div>
       </div>
       {msgs.length > 0 && (
         <div className="retro-sunken mb-2 max-h-56 space-y-2 overflow-y-auto p-2 text-xs" aria-live="polite">
           {msgs.map((m, i) => (
             <div key={i} className={cn("whitespace-pre-wrap border-2 border-black p-1.5", m.role === "user" ? "ml-6 bg-[#e3d8fa]" : "mr-6 bg-white")}>{m.content}</div>
           ))}
-          {busy && <p className="blink">FinPilot is thinking…</p>}
+          {busy && <p className="blink">Penny is thinking…</p>}
         </div>
       )}
       {error && <p className="mb-2 border-2 border-black bg-[#ffd0d0] p-1.5 text-xs">{error}</p>}

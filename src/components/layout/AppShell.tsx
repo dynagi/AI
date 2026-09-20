@@ -10,7 +10,7 @@ import { Plant, Smile, Sprite } from "@/components/retro/Sprite";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: "🏠" },
-  { href: "/chat", label: "Ask FinPilot", icon: "💬" },
+  { href: "/chat", label: "Ask Penny", icon: "💬" },
   { href: "/transactions", label: "Transactions", icon: "📄" },
   { href: "/budgets", label: "Budgets", icon: "📁" },
   { href: "/goals", label: "Goals", icon: "🎯" },
