@@ -1,4 +1,4 @@
--- 007_budgets.sql
+-- 009_budgets.sql
 -- Category budgets (e.g. Food 5,000). Separate from the savings target.
 -- A budget applies to every cycle; usage is always measured against the
 -- CURRENT ACTIVE cycle's spending in that category.

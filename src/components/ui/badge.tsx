@@ -2,14 +2,14 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-const badgeVariants = cva("inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold", {
+const badgeVariants = cva("inline-flex items-center border-2 border-black px-1.5 text-[11px] font-bold uppercase leading-5 text-black", {
   variants: {
     variant: {
-      default: "border-transparent bg-primary/15 text-primary",
-      positive: "border-transparent bg-positive/15 text-positive",
-      negative: "border-transparent bg-negative/15 text-negative",
-      warning: "border-transparent bg-warning/15 text-warning",
-      outline: "text-muted-foreground border-border",
+      default: "bg-lavender",
+      positive: "bg-mint-accent",
+      negative: "bg-[#FF3333] text-white",
+      warning: "bg-cream",
+      outline: "bg-white",
     },
   },
   defaultVariants: { variant: "default" },

@@ -17,7 +17,7 @@ FastAPI (Python, Pydantic)                                   (backend/app)
   Data Provider ─► Transaction Normalizer ─► Transaction Service (ingest) ─► Supabase PostgreSQL ─► AI Agent
   (Demo Bank | AA sandbox | Manual | CSV)     ledger + cycle engine, recurring, alerts, insights
         │
-        └─ LangGraph agent + 17 data tools (backend/app/agent)  ─►  configurable LLM (Gemini default)
+        └─ LangGraph agent + 25 data tools (backend/app/agent)  ─►  configurable LLM (Gemini default)
 ```
 
 * **Source of truth: Supabase PostgreSQL.** Schema and seed are plain SQL in `supabase/`. There is no Prisma and no second database.
@@ -26,13 +26,13 @@ FastAPI (Python, Pydantic)                                   (backend/app)
 * Money uses `numeric(14,2)` in Postgres and `Decimal` in Python (not floats). I did not use pandas: exact decimal arithmetic matters more than dataframes here.
 
 ```
-supabase/migrations/001…016_*.sql   schema, realtime publication, RLS
-supabase/seed/demo_*.sql            demo user, account, cycles, 236 transactions, targets, budgets
+supabase/migrations/001…020_*.sql   schema, goals, summaries, realtime publication, RLS
+supabase/seed/demo_*.sql            demo user, account, cycles + targets, 236 transactions, goals, budgets, summaries
 backend/app/ledger/engine.py        pure ledger + cycle engine (no DB, fully unit-tested)
 backend/app/services/               ingest, ledger_service, alerts, insights, savings, comparison, dashboard, …
 backend/app/providers/              FinancialDataProvider interface + demo_bank, aa_sandbox, manual, csv
-backend/app/agent/                  LangGraph graph, 17 tools, prompt, LLM factory
-backend/tests/                      80 tests (engine, real-Postgres scenarios, RLS, API, agent, CSV)
+backend/app/agent/                  LangGraph graph, 25 tools, prompt, LLM factory
+backend/tests/                      142 tests (engine, goals, real-Postgres scenarios, RLS, API, agent, CSV)
 src/                                Next.js app
 ```
 
@@ -59,7 +59,7 @@ Prerequisites: Node 18+, Python 3.11+, a Supabase project (free tier is fine).
 
 Apply the migrations, then the seed, to your Supabase project. Pick one:
 
-**A. SQL editor.** Run every file in `supabase/migrations/` in numeric order (001 → 016), then the seed files in this order: `demo_user`, `demo_account`, `demo_cycles`, `demo_transactions`, `demo_targets`, `demo_budgets`.
+**A. SQL editor.** Run every file in `supabase/migrations/` in numeric order (001 → 020), then the seed files in this order: `demo_user`, `demo_account`, `demo_cycles`, `demo_transactions`, `demo_goals`, `demo_budgets`, `demo_summaries`. (All migrations are idempotent, so re-running them on a database created by an earlier version is safe.)
 
 **B. From your machine (no CLI needed).**
 ```bash
@@ -90,7 +90,7 @@ Environment (`backend/.env`, template in `backend/.env.example`):
 | `SUPABASE_REGION` | Optional, e.g. `ap-south-1`. Only if the direct host does not resolve on your network (IPv4-only); enables the Supabase pooler as a fallback. |
 | `DATABASE_URL` | Optional full override of the three values above. |
 | `SUPABASE_JWT_SECRET` | Only for legacy HS256 projects. |
-| `LLM_PROVIDER`, `GEMINI_API_KEY`, `GEMINI_MODEL` | Chat agent. Default `gemini` / `gemini-3.6-flash`. `openai` and `anthropic` also work (install `langchain-openai` / `langchain-anthropic`). |
+| `LLM_PROVIDER`, `GEMINI_API_KEY`, `GEMINI_MODEL` | Chat agent. Default `gemini` / `gemini-flash-latest`. `openai` and `anthropic` also work (install `langchain-openai` / `langchain-anthropic`). |
 | `DEMO_MODE` | `true` enables the Demo Bank Simulator endpoints. |
 | `SETU_*` | Leave blank unless you have Setu sandbox credentials. |
 
@@ -122,9 +122,29 @@ POST /demo/transactions
 6. *Savings-risk demo: ₹70,000 expense* → "⚠️ Savings goal at risk". This is real arithmetic (₹76,000 spent vs a ₹75,000 limit), not a canned alert. A ₹6,000 spend alone is honestly *on track* against a ₹75,000 limit.
 7. **Comparisons** page shows the untouched ₹42,500 previous cycle. *Reset simulator events* removes only rows flagged `metadata.simulated` and rebuilds; seeded/imported data is never touched.
 
+
+## Goals, budgets, summaries (the "decision-support" layer)
+
+Three different things, deliberately kept apart:
+
+| | What it is | Where |
+|---|---|---|
+| **Savings target** | How much of *this cycle's* income you want to keep (`monthly_savings_targets`). Drives the spending limit `income - target`. | `/savings` |
+| **Budgets** | Per-category caps for the cycle. Status `ON_TRACK / AT_RISK / OVER_BUDGET`, plus committed and projected spend. | `/budgets` |
+| **Goals** | Long-term goals: `PURCHASE, EMERGENCY_FUND, TRAVEL, EDUCATION, CUSTOM`, with contributions. | `/goals` |
+
+* **Goal maths** (`backend/app/services/goals.py`, pure and unit-tested): required monthly contribution = remaining / months left. The monthly savings pace is the *lower* of your recent average (last <= 3 closed cycles) and this cycle's projected savings, so a spending spike now immediately affects your goals. Goals share that pace by priority, then date. Status: `ON_TRACK / AT_RISK (covers >= 70%) / BEHIND / COMPLETED`. A contribution raises the goal's saved amount only; it is never an expense.
+* **"How much of my budget is committed?"** `committed = already spent + recurring payments still expected before the cycle ends`, against the monthly limit (`income - savings target`, else the sum of category budgets). Already-spent and expected are always shown separately with the calculation.
+* **Monthly summaries** are stored per cycle (`monthly_summaries`) and generated automatically when a cycle closes (and on demand). Each has key observations and action items (`monthly_summary_actions`) built from real numbers, e.g. *"Review the ₹1,900 increase in shopping expenses compared with the previous cycle"*. Completed or dismissed items are never deleted or overwritten when a summary is regenerated. Pages: `/summaries`, `/summaries/<id>`.
+* **Insights** (`/insights`) shows trends, unusual activity, recurring payments, goal risks and budget risks, each with the data behind it. Categories with no transactions never appear.
+
+Demo clock: after the demo salary (30 Sep 2026 11:27:04 IST) the simulator posts events at 11:35, 11:40, 12:05, then every 30 minutes, so the scripted demo reads Swiggy 11:35 AM, Rahul 11:40 AM, Amazon 12:05 PM (balance ₹1,33,340, expenses ₹2,660).
+
+Regenerating seed data: `python -m scripts.generate_seed` then `python -m scripts.generate_summaries_seed` (the second runs the real summary service against a scratch Postgres and writes `demo_summaries.sql`).
+
 ## AI agent
 
-`POST /chat` → LangGraph loop (`agent → tools → agent`) over 17 read-only tools: `get_current_balance, get_current_cycle, get_current_cycle_summary, get_transaction_history, get_transactions_between_dates, get_monthly_summary, compare_cycles, compare_categories, get_recurring_payments, get_budget_status, get_savings_target, get_savings_progress, get_recent_large_transactions, get_unusual_transactions, get_previous_cycle_total, get_remaining_before_previous_cycle, get_upcoming_obligations`.
+`POST /chat` → LangGraph loop (`agent → tools → agent`) over 25 read-only tools: `get_current_balance, get_current_cycle, get_current_cycle_summary, get_transaction_history, get_transactions_between_dates, get_category_breakdown, compare_cycles, compare_categories, get_previous_cycle_total, get_remaining_before_previous_cycle, get_recurring_payments, get_upcoming_obligations, get_budget_status, get_budget_commitments, get_financial_goals, get_goal_progress, get_goal_projection, get_savings_target, get_savings_progress, get_recent_large_transactions, get_unusual_transactions, get_monthly_summary, get_monthly_trends, get_daily_spending, get_monthly_action_items`.
 
 * Tools take **no user id**; they are bound to the JWT user when built. Cycle ids the model passes are ownership-checked.
 * Tool output carries exact values plus `*_inr` display strings, and the system prompt forbids stating any number that did not come from a tool, giving investment advice, or moralising.
@@ -148,7 +168,7 @@ Migration 015 publishes `transactions, financial_accounts, financial_cycles, age
 cd backend
 # Integration tests need a PostgreSQL server you can create databases on:
 export TEST_ADMIN_DSN=postgresql://postgres:postgres@localhost:54322/postgres   # e.g. `supabase start`
-.venv/Scripts/python -m pytest -q          # 80 tests; DB tests are skipped if no server is reachable
+.venv/Scripts/python -m pytest -q          # 142 tests; DB tests are skipped if no server is reachable
 cd .. && npm run typecheck && npm run build
 ```
 The suite builds a template database (Supabase stub + all migrations + seed) once and clones it per test. It covers: opening balance is not income; salary raises balance and opens a cycle at its exact timestamp; before/after-salary expense assignment; transfer-in is not salary; historical cycles unchanged; back-dated rows; previous-cycle comparison; savings target and at-risk logic; RLS with real `authenticated`/`anon` roles; cross-user isolation over HTTP and through agent tools; CSV parsing; consent flow; and the full spec scenario.

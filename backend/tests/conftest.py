@@ -55,7 +55,7 @@ def template_db():
     with psycopg.connect(dsn, autocommit=True) as c:
         c.execute("create publication supabase_realtime")
     _run_files(dsn, sorted((ROOT / "supabase" / "migrations").glob("*.sql")))
-    seeds = ["demo_user", "demo_account", "demo_cycles", "demo_transactions", "demo_targets", "demo_budgets"]
+    seeds = ["demo_user", "demo_account", "demo_cycles", "demo_transactions", "demo_goals", "demo_budgets", "demo_summaries"]
     _run_files(dsn, [ROOT / "supabase" / "seed" / f"{n}.sql" for n in seeds])
     yield TEMPLATE
     admin.execute(f"drop database if exists {TEMPLATE} with (force)")
@@ -88,3 +88,19 @@ def make_user(conn, email: str | None = None) -> str:
         (uid, email),
     )
     return uid
+
+
+@pytest.fixture(autouse=True)
+def _frozen_wall_clock(monkeypatch):
+    """Cycle maths treats 'now' as max(wall clock, latest ledger entry). Freezing the wall clock in the past makes 'now'
+    always the latest ledger entry, so results never depend on the day the tests are run."""
+    import app.services.cycle_state as cs
+    from datetime import datetime as _dt, timezone as _tz
+
+    class _Frozen(_dt):
+        @classmethod
+        def now(cls, tz=None):
+            v = _dt(2026, 1, 1, tzinfo=_tz.utc)
+            return v.astimezone(tz) if tz else v.replace(tzinfo=None)
+
+    monkeypatch.setattr(cs, "datetime", _Frozen)

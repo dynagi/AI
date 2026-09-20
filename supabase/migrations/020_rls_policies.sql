@@ -1,4 +1,4 @@
--- 016_rls_policies.sql
+-- 020_rls_policies.sql
 -- Row Level Security: every financial table is isolated by user_id.
 --
 -- Model:
@@ -17,7 +17,8 @@ begin
     'users', 'financial_accounts', 'transactions', 'category_rules',
     'financial_cycles', 'monthly_savings_targets', 'budgets', 'recurring_payments',
     'financial_insights', 'agent_alerts', 'agent_conversations', 'agent_messages',
-    'data_sources', 'consents'
+    'data_sources', 'consents', 'financial_goals', 'goal_contributions', 'monthly_summaries',
+    'monthly_summary_actions'
   ]
   loop
     execute format('alter table public.%I enable row level security', t);
@@ -39,7 +40,8 @@ begin
     'financial_accounts', 'transactions', 'category_rules',
     'financial_cycles', 'monthly_savings_targets', 'budgets', 'recurring_payments',
     'financial_insights', 'agent_alerts', 'agent_conversations', 'agent_messages',
-    'data_sources', 'consents'
+    'data_sources', 'consents', 'financial_goals', 'goal_contributions', 'monthly_summaries',
+    'monthly_summary_actions'
   ]
   loop
     execute format('drop policy if exists %I on public.%I', t || '_select_own', t);
@@ -59,7 +61,8 @@ begin
     'users', 'financial_accounts', 'transactions', 'category_rules',
     'financial_cycles', 'monthly_savings_targets', 'budgets', 'recurring_payments',
     'financial_insights', 'agent_alerts', 'agent_conversations', 'agent_messages',
-    'data_sources', 'consents'
+    'data_sources', 'consents', 'financial_goals', 'goal_contributions', 'monthly_summaries',
+    'monthly_summary_actions'
   ]
   loop
     execute format('revoke insert, update, delete, truncate on public.%I from anon, authenticated', t);

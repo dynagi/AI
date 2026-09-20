@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Upload } from "lucide-react";
 import { api } from "@/lib/api";
 import { useLedgerData } from "@/hooks/useLedgerData";
@@ -25,10 +25,18 @@ export default function TransactionsPage() {
   const { bump } = useLedger();
   const [category, setCategory] = useState("");
   const [q, setQ] = useState("");
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("category")) setCategory(sp.get("category")!);
+    if (sp.get("q")) setQ(sp.get("q")!);
+  }, []);
   const path = `/transactions?limit=500${category ? `&category=${encodeURIComponent(category)}` : ""}${q ? `&q=${encodeURIComponent(q)}` : ""}`;
   const { data, error, loading } = useLedgerData<{ transactions: Txn[]; categories: string[] }>(path);
 
   const [showForm, setShowForm] = useState(false);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("add") === "1") setShowForm(true);
+  }, []);
   const [form, setForm] = useState({ transaction_type: "EXPENSE", amount: "", merchant: "", description: "", category: "", timestamp: "" });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);

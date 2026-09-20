@@ -30,6 +30,20 @@ def cycle_summary(conn: psycopg.Connection, user_id: str, cycle: dict) -> dict:
     savings = income - net_spend
     cats = queries.category_breakdown(conn, user_id, cid)
     recurring = queries.recurring_spend_in_cycle(conn, user_id, cid)
+    recurring_items = conn.execute(
+        """
+        select coalesce(merchant, description) as merchant, sum(amount) as total, count(*) as count
+        from transactions where user_id = %s and financial_cycle_id = %s and transaction_type = 'EXPENSE' and is_recurring
+        group by 1 order by total desc
+        """,
+        (user_id, cid),
+    ).fetchall()
+    spent_by_cat = {c["category"]: c["total"] for c in cats}
+    budget_usage = [
+        {"category": b["category"], "budget": b["amount"], "spent": spent_by_cat.get(b["category"], ZERO),
+         "percent_used": round(float(spent_by_cat.get(b["category"], ZERO) / b["amount"] * 100), 1) if b["amount"] else 0.0}
+        for b in queries.budgets_for(conn, user_id)
+    ]
     return {
         "id": cid,
         "label": cycle_label(cycle, tz),
@@ -54,7 +68,8 @@ def cycle_summary(conn: psycopg.Connection, user_id: str, cycle: dict) -> dict:
             for c in cats
         ],
         "top_categories": [{"category": c["category"], "total": c["total"]} for c in cats[:3]],
-        "recurring_expenses": {"total": recurring["total"], "count": recurring["count"]},
+        "recurring_expenses": {"total": recurring["total"], "count": recurring["count"], "items": recurring_items},
+        "budget_usage": budget_usage,
         "largest_transactions": [
             {"id": str(t["id"]), "timestamp": t["timestamp"], "merchant": t["merchant"], "description": t["description"],
              "amount": t["amount"], "category": t["category"]}

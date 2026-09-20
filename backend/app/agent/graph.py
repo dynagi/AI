@@ -15,18 +15,19 @@ from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from app.agent.llm import LLMUnavailable, get_llm
-from app.agent.prompts import SYSTEM_PROMPT
+from app.agent.prompts import system_prompt
 from app.agent.tools import ToolContext, build_tools
 from app.logging_utils import log_event
 
 MAX_STEPS = 14  # graph steps (each tool round trip is 2)
 
 
-def build_graph(llm: BaseChatModel, tools: list):
+def build_graph(llm: BaseChatModel, tools: list, tone: str = "chill"):
     bound = llm.bind_tools(tools)
+    prompt = system_prompt(tone)
 
     def agent(state: MessagesState) -> dict:
-        reply = bound.invoke([SystemMessage(content=SYSTEM_PROMPT)] + state["messages"])
+        reply = bound.invoke([SystemMessage(content=prompt)] + state["messages"])
         return {"messages": [reply]}
 
     g = StateGraph(MessagesState)
@@ -58,12 +59,12 @@ class ChatResult:
 
 
 def run_agent(
-    ctx: ToolContext, history: list[dict], message: str, llm: Optional[BaseChatModel] = None
+    ctx: ToolContext, history: list[dict], message: str, llm: Optional[BaseChatModel] = None, tone: str = "chill"
 ) -> ChatResult:
     """`history` is prior [{role, content}] turns (user/assistant only)."""
     llm = llm or get_llm()
     tools = build_tools(ctx)
-    graph = build_graph(llm, tools)
+    graph = build_graph(llm, tools, tone)
 
     msgs: list[BaseMessage] = []
     for h in history[-20:]:
@@ -79,7 +80,14 @@ def run_agent(
         log_event("agent.error", user_id=ctx.user_id, error=name)
         if name in {"GraphRecursionError"}:
             return ChatResult("I couldn't finish that analysis. Could you ask a narrower question?", [])
-        raise LLMUnavailable(f"The AI provider failed: {name}") from exc
+        low = name.lower()
+        kind = (
+            "rate_limit" if "ratelimit" in low or "resourceexhausted" in low or "quota" in str(exc).lower()[:400]
+            else "model_not_found" if "notfound" in low
+            else "auth" if "auth" in low or "permission" in low or "invalidargument" in low
+            else "unavailable"
+        )
+        raise LLMUnavailable(f"The AI provider failed: {name}", kind=kind) from exc
 
     new = out["messages"][len(msgs):]
     calls: dict[str, dict] = {}

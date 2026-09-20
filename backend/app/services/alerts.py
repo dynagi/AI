@@ -20,6 +20,7 @@ from app.config import get_settings
 from app.services import queries
 from app.services.budgets import budget_status
 from app.services.cycle_state import as_of, cycle_label, savings_progress_for
+from app.services.goals import goals_overview
 from app.services.ledger_service import InsertedTxn
 from app.services.savings import inr, inr0
 
@@ -234,6 +235,17 @@ def evaluate_alerts(
                         f"for this cycle.",
                 dedupe_key=f"budget:{cycle_id}:{b['category']}:{level}",
                 evidence={"category": b["category"], "spent": str(b["spent"]), "budget": str(b["amount"])},
+            )
+
+    # --- Goals that the current savings pace no longer supports
+    for g in goals_overview(conn, user_id, account_id)["goals"]:
+        if g["lifecycle"] == "ACTIVE" and g["status"] in ("AT_RISK", "BEHIND"):
+            raise_(
+                alert_type="GOAL_AT_RISK", severity="critical" if g["status"] == "BEHIND" else "warning",
+                title=f"⚠️ {g['name']} goal {'is behind' if g['status'] == 'BEHIND' else 'at risk'}", message=g["message"],
+                dedupe_key=f"goal_risk:{g['id']}:{cycle_id}",
+                evidence={"goal_id": g["id"], "required_monthly": str(g["required_monthly_contribution"]),
+                          "allocated_monthly": str(g["allocated_monthly_savings"]), "status": g["status"]},
             )
 
     return raised

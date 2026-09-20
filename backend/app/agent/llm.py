@@ -13,7 +13,14 @@ from app.config import get_settings
 
 
 class LLMUnavailable(RuntimeError):
-    """No usable model is configured (missing key/package) or the provider is down."""
+    """No usable model is configured (missing key/package) or the provider is down.
+
+    kind: not_configured | rate_limit | model_not_found | auth | unavailable
+    """
+
+    def __init__(self, message: str, kind: str = "unavailable"):
+        super().__init__(message)
+        self.kind = kind
 
 
 @lru_cache(maxsize=4)
@@ -38,11 +45,11 @@ def get_llm():
     provider = s.llm_provider.lower()
     key = {"gemini": s.gemini_api_key, "openai": s.openai_api_key, "anthropic": s.anthropic_api_key}.get(provider)
     if not key:
-        raise LLMUnavailable(f"No API key configured for LLM_PROVIDER={provider!r}.")
+        raise LLMUnavailable(f"No API key configured for LLM_PROVIDER={provider!r}.", kind="not_configured")
     try:
         return _build(provider, s.llm_model, key)
     except ImportError as exc:
-        raise LLMUnavailable(f"The package for LLM_PROVIDER={provider!r} is not installed: {exc}") from exc
+        raise LLMUnavailable(f"The package for LLM_PROVIDER={provider!r} is not installed: {exc}", kind="not_configured") from exc
 
 
 def get_llm_or_none():

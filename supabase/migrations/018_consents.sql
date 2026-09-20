@@ -1,4 +1,4 @@
--- 014_consents.sql
+-- 018_consents.sql
 -- Account Aggregator style consent lifecycle (sandbox / demo only in this build).
 
 create table if not exists public.consents (

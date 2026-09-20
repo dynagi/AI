@@ -1,4 +1,4 @@
--- 012_agent_messages.sql
+-- 016_agent_messages.sql
 -- user_id is stored on every message so row level security is a simple
 -- equality check (no join back to the conversation).
 

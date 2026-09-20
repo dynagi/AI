@@ -18,7 +18,10 @@ export const useLedger = () => useContext(Ctx);
 
 // Supabase Realtime: the browser subscribes (with the user's own JWT, so RLS applies) to changes on the ledger tables.
 // The event only signals "something changed"; the numbers themselves are always re-read from the backend.
-const TABLES = ["transactions", "financial_accounts", "financial_cycles", "agent_alerts", "financial_insights"];
+const TABLES = [
+  "transactions", "financial_accounts", "financial_cycles", "agent_alerts", "financial_insights",
+  "financial_goals", "goal_contributions", "monthly_summaries", "monthly_summary_actions",
+];
 
 export function LedgerProvider({ children }: { children: React.ReactNode }) {
   const { userId } = useAuth();

@@ -17,12 +17,13 @@ import psycopg
 
 from app.logging_utils import log_event
 from app.providers.base import RawTransaction
-from app.services.alerts import evaluate_alerts
+from app.services.alerts import evaluate_alerts, upsert_alert
 from app.services.categorization import Categorizer
 from app.services.insights import refresh_insights
 from app.services.ledger_service import InsertedTxn, insert_transactions, lock_account, rebuild_account
 from app.services.normalizer import MalformedTransaction, normalize
 from app.services.recurring import refresh_recurring
+from app.services.summaries import sync_summaries
 
 
 @dataclass
@@ -91,7 +92,14 @@ def ingest(
 
     if analyze:
         refresh_recurring(conn, user_id, account_id)
-        summary.alerts = evaluate_alerts(
+        for cycle_id, is_new in sync_summaries(conn, user_id, account_id):
+            if is_new and len(inserted.inserted) <= 25:  # a cycle just closed during a live event, not a bulk import
+                row = conn.execute("select title from monthly_summaries where financial_cycle_id = %s and user_id = %s", (cycle_id, user_id)).fetchone()
+                summary.alerts.append(upsert_alert(
+                    conn, user_id, cycle_id=cycle_id, alert_type="SUMMARY_READY", severity="info", title="Monthly summary ready",
+                    message=f"{row['title']} has been generated, with key observations and action items.",
+                    dedupe_key=f"summary:{cycle_id}", evidence={"cycle_id": cycle_id}))
+        summary.alerts += evaluate_alerts(
             conn, user_id, account_id, inserted=inserted.inserted, new_cycle_ids=rb.new_cycle_ids
         )
         refresh_insights(conn, user_id, account_id)

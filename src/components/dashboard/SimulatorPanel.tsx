@@ -16,12 +16,12 @@ interface Action {
 
 const ACTIONS: Action[] = [
   { label: "Credit Salary ₹1,00,000", body: { type: "SALARY", amount: 100000 } },
-  { label: "Receive ₹1,000 (Rahul)", body: { type: "TRANSFER_IN", amount: 1000, merchant: "Rahul" }, variant: "secondary" },
-  { label: "Add Expense ₹160 (Swiggy)", body: { type: "EXPENSE", amount: 160, merchant: "Swiggy" }, variant: "secondary" },
+  { label: "Receive ₹1,000", body: { type: "TRANSFER_IN", amount: 1000, merchant: "Rahul" }, variant: "secondary" },
+  { label: "Add Expense ₹160", body: { type: "EXPENSE", amount: 160, merchant: "Swiggy" }, variant: "secondary" },
   { label: "Add Expense ₹2,500 (Amazon)", body: { type: "EXPENSE", amount: 2500, merchant: "Amazon" }, variant: "secondary" },
   { label: "Add Large Expense ₹6,000", body: { type: "EXPENSE", amount: 6000, merchant: "Croma Electronics" }, variant: "secondary" },
   { label: "Add Refund ₹500", body: { type: "REFUND", amount: 500, merchant: "Amazon" }, variant: "secondary" },
-  { label: "Savings-risk demo: ₹70,000 expense", body: { type: "EXPENSE", amount: 70000, merchant: "Croma Electronics" }, variant: "destructive" },
+  { label: "Generate Savings Alert", body: { type: "EXPENSE", amount: 70000, merchant: "Croma Electronics" }, variant: "destructive" },
 ];
 
 interface Result {
@@ -31,7 +31,7 @@ interface Result {
   new_cycle_started: boolean;
 }
 
-export default function SimulatorPanel({ accountId }: { accountId?: string }) {
+export default function SimulatorPanel({ accountId, needsTarget = false }: { accountId?: string; needsTarget?: boolean }) {
   const { bump } = useLedger();
   const [busy, setBusy] = useState<string | null>(null);
   const [last, setLast] = useState<string | null>(null);
@@ -48,6 +48,20 @@ export default function SimulatorPanel({ accountId }: { accountId?: string }) {
           (r.new_cycle_started ? " · new financial cycle started" : "") +
           (r.alerts.length ? ` · ${r.alerts.map((x) => x.title).join(", ")}` : ""),
       );
+      bump();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function cashflowScenario() {
+    setBusy("cashflow");
+    setError(null);
+    try {
+      const r = await api<{ risk_level: string; warning_message: string }>("/demo/cashflow-scenario", { method: "POST" });
+      setLast(`Cash-flow demo ready: ${r.risk_level}. ${r.warning_message}`);
       bump();
     } catch (e) {
       setError((e as Error).message);
@@ -85,9 +99,13 @@ export default function SimulatorPanel({ accountId }: { accountId?: string }) {
             {busy === a.label ? "Posting…" : a.label}
           </Button>
         ))}
+        <Button size="sm" variant="secondary" className="w-full justify-start" disabled={busy !== null} onClick={cashflowScenario}>
+          {busy === "cashflow" ? "Setting up…" : "Demo: cash-flow crunch (₹1,000 vs ₹2,000 due)"}
+        </Button>
         <Button size="sm" variant="ghost" className="w-full justify-start text-muted-foreground" disabled={busy !== null} onClick={reset}>
           Reset simulator events
         </Button>
+        <p className="pt-1 text-[11px] text-muted-foreground">Generate Savings Alert posts a ₹70,000 expense so your savings target is genuinely exceeded{needsTarget ? " (set a savings target first)" : ""}.</p>
         {last && <p className="pt-1 text-xs text-positive">{last}</p>}
         {error && <p className="pt-1 text-xs text-negative">{error}</p>}
       </CardContent>

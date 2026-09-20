@@ -22,10 +22,12 @@ D = Decimal
 
 EXPECTED_TOOLS = {
     "get_current_balance", "get_current_cycle", "get_current_cycle_summary", "get_transaction_history",
-    "get_transactions_between_dates", "get_monthly_summary", "compare_cycles", "compare_categories",
-    "get_recurring_payments", "get_budget_status", "get_savings_target", "get_savings_progress",
-    "get_recent_large_transactions", "get_unusual_transactions", "get_previous_cycle_total",
-    "get_remaining_before_previous_cycle", "get_upcoming_obligations",
+    "get_transactions_between_dates", "get_category_breakdown", "compare_cycles", "compare_categories",
+    "get_previous_cycle_total", "get_remaining_before_previous_cycle", "get_recurring_payments",
+    "get_upcoming_obligations", "get_budget_status", "get_budget_commitments", "get_financial_goals",
+    "get_goal_progress", "get_goal_projection", "get_savings_target", "get_savings_progress",
+    "get_recent_large_transactions", "get_unusual_transactions", "get_monthly_summary", "get_monthly_trends",
+    "get_daily_spending", "get_monthly_action_items", "get_upcoming_financial_risks", "simulate_purchase", "get_daily_briefing",
 }
 
 
@@ -67,7 +69,8 @@ def demo_new_cycle(conn):
     simulate_transaction(conn, user_id=DEMO_USER, account_id=DEMO_ACCOUNT, transaction_type="TRANSFER_IN", amount=D("1000"))
 
 
-def test_all_seventeen_tools_exist(conn):
+def test_all_tools_from_the_spec_exist(conn):
+    assert len(EXPECTED_TOOLS) == 28
     assert {t.name for t in build_tools(ctx_for(conn))} == EXPECTED_TOOLS
 
 

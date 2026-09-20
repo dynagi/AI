@@ -18,7 +18,7 @@ import psycopg
 from app.db import resolve_conninfo
 
 ROOT = Path(__file__).resolve().parents[2]
-SEED_ORDER = ["demo_user", "demo_account", "demo_cycles", "demo_transactions", "demo_targets", "demo_budgets"]
+SEED_ORDER = ["demo_user", "demo_account", "demo_cycles", "demo_transactions", "demo_goals", "demo_budgets", "demo_summaries"]
 
 
 def run(dsn: str, files: list[Path]) -> None:

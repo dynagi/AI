@@ -23,13 +23,14 @@ class Settings(BaseSettings):
 
     # Behaviour
     app_timezone: str = "Asia/Kolkata"
+    safety_buffer: float = 5000  # INR floor the user wants to stay above; drives the cash-flow "Low balance buffer" warning
     demo_mode: bool = True  # enables the Demo Bank Simulator endpoints
 
     # AI agent (LangGraph + configurable LLM provider)
     llm_provider: str = "gemini"  # gemini | openai | anthropic
     llm_model: Optional[str] = None
     gemini_api_key: Optional[str] = None
-    gemini_model: str = "gemini-3.6-flash"
+    gemini_model: str = "gemini-flash-latest"
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
 

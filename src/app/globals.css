@@ -2,50 +2,241 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ------------------------------------------------------------------------------------------------
+   FinPilot "Windows 95" design system.
+   Flat colours only (no gradients, no glass, no rounded corners). Depth comes from 2px black borders,
+   white/grey bevels and hard pixel shadows.
+   ---------------------------------------------------------------------------------------------- */
+
 @layer base {
   :root {
-    --background: 222 25% 7%;
-    --foreground: 220 20% 92%;
-    --card: 222 22% 10%;
-    --card-foreground: 220 20% 92%;
-    --primary: 226 100% 68%;
+    --background: 143 65% 84%; /* mint desktop  #B8F0CF */
+    --foreground: 0 0% 4%;
+    --card: 0 0% 91%; /* window grey  #E8E8E8 */
+    --card-foreground: 0 0% 4%;
+    --primary: 262 55% 42%; /* readable purple for links / text accents */
     --primary-foreground: 0 0% 100%;
-    --secondary: 222 18% 16%;
-    --secondary-foreground: 220 20% 92%;
-    --muted: 222 18% 14%;
-    --muted-foreground: 220 10% 60%;
-    --border: 222 16% 18%;
-    --input: 222 16% 22%;
-    --ring: 226 100% 68%;
-    --positive: 142 70% 50%;
-    --negative: 0 84% 65%;
-    --warning: 40 95% 58%;
-    --radius: 0.85rem;
+    --secondary: 0 0% 96%; /* #F5F5F5 */
+    --secondary-foreground: 0 0% 4%;
+    --muted: 0 0% 82%;
+    --muted-foreground: 0 0% 27%;
+    --border: 0 0% 0%;
+    --input: 0 0% 0%;
+    --ring: 262 55% 42%;
+    --positive: 142 76% 30%; /* #16A34A family, darker for text contrast */
+    --negative: 0 100% 60%; /* #FF3333 */
+    --warning: 35 100% 28%;
+    --radius: 0px;
   }
 
   * {
     @apply border-border;
+    border-radius: 0 !important;
+  }
+
+  html {
+    font-size: 14px;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "tnum" 1, "cv11" 1;
+    font-family: var(--font-mono), "Courier New", monospace;
+    /* faint low-resolution dot texture on the mint desktop */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Crect width='1' height='1' fill='%23A6E6C0'/%3E%3C/svg%3E");
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-pixel), var(--font-mono), monospace;
+    letter-spacing: 0.02em;
+  }
+
+  ::selection {
+    background: #b79aef;
+    color: #000;
+  }
+
+  a {
+    text-underline-offset: 2px;
+  }
+
+  :focus-visible {
+    outline: 2px dotted #000;
+    outline-offset: -4px;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button {
+    opacity: 1;
   }
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--input));
-  border-radius: 999px;
+@layer components {
+  /* ----- windows ----- */
+  .retro-window {
+    background: #e8e8e8;
+    border: 2px solid #000;
+    box-shadow: 4px 4px 0 #000;
+  }
+
+  .retro-titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem;
+    min-height: 28px;
+    padding: 2px 4px 2px 8px;
+    background: #b79aef;
+    border-bottom: 2px solid #000;
+    color: #000;
+    font-family: var(--font-pixel), var(--font-mono), monospace;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    user-select: none;
+  }
+  .retro-titlebar[data-focused="true"] {
+    background: #a98be8;
+  }
+  .retro-titlebar[data-tone="grey"] {
+    background: #b4b4b4;
+  }
+  .retro-titlebar[data-tone="yellow"] {
+    background: #fff29a;
+  }
+  .retro-titlebar a {
+    text-transform: none;
+    letter-spacing: 0;
+    font-family: var(--font-mono), monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: #000;
+    text-decoration: underline;
+  }
+
+  .retro-winbtn {
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    background: #e8e8e8;
+    border: 2px solid #000;
+    box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #7f7f7f;
+    font: 700 11px/1 var(--font-mono), monospace;
+    color: #000;
+    cursor: pointer;
+    padding: 0;
+  }
+  .retro-winbtn:active {
+    box-shadow: inset 2px 2px 0 #7f7f7f, inset -2px -2px 0 #fff;
+    transform: translate(1px, 1px);
+  }
+
+  /* ----- controls ----- */
+  .retro-bevel {
+    background: #e8e8e8;
+    border: 2px solid #000;
+    box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #7f7f7f;
+    cursor: pointer;
+  }
+  .retro-bevel:hover:not(:disabled) {
+    background: #f3f3f3;
+  }
+  .retro-bevel:active:not(:disabled),
+  .retro-bevel[aria-pressed="true"] {
+    box-shadow: inset 2px 2px 0 #7f7f7f, inset -2px -2px 0 #fff;
+    transform: translate(1px, 1px);
+  }
+  .retro-bevel:disabled {
+    cursor: not-allowed;
+    color: #6b6b6b;
+  }
+
+  .retro-sunken {
+    background: #fff;
+    border: 2px solid #000;
+    box-shadow: inset 2px 2px 0 #7f7f7f;
+  }
+
+  .retro-note {
+    background: #fff29a;
+    border: 2px solid #000;
+    box-shadow: inset 2px 2px 0 #fffbd0, inset -2px -2px 0 #d9c94d;
+  }
+
+  .retro-menu {
+    background: #e8e8e8;
+    border: 2px solid #000;
+    box-shadow: 4px 4px 0 #000, inset 2px 2px 0 #fff, inset -2px -2px 0 #7f7f7f;
+  }
+
+  /* ----- taskbar ----- */
+  .retro-taskbar {
+    background: #e8e8e8;
+    border-top: 2px solid #000;
+    box-shadow: inset 0 2px 0 #fff;
+  }
+
+  /* ----- classic scrollbars (WebKit / Blink) ----- */
+  *::-webkit-scrollbar {
+    width: 18px;
+    height: 18px;
+  }
+  *::-webkit-scrollbar-track {
+    background-color: #e8e8e8;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='2' height='2' fill='%23ffffff'/%3E%3Crect x='2' y='2' width='2' height='2' fill='%23ffffff'/%3E%3Crect x='2' width='2' height='2' fill='%23bdbdbd'/%3E%3Crect y='2' width='2' height='2' fill='%23bdbdbd'/%3E%3C/svg%3E");
+    border-left: 2px solid #000;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: #e8e8e8;
+    border: 2px solid #000;
+    box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #7f7f7f;
+  }
+  *::-webkit-scrollbar-corner {
+    background: #e8e8e8;
+  }
+  *::-webkit-scrollbar-button:single-button {
+    display: block;
+    width: 18px;
+    height: 18px;
+    background-color: #e8e8e8;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: 2px solid #000;
+    box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #7f7f7f;
+  }
+  *::-webkit-scrollbar-button:single-button:vertical:decrement {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M4 0L8 5H0z' fill='%23000'/%3E%3C/svg%3E");
+  }
+  *::-webkit-scrollbar-button:single-button:vertical:increment {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0H8L4 5z' fill='%23000'/%3E%3C/svg%3E");
+  }
+  *::-webkit-scrollbar-button:single-button:horizontal:decrement {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='5' height='8'%3E%3Cpath d='M0 4L5 0V8z' fill='%23000'/%3E%3C/svg%3E");
+  }
+  *::-webkit-scrollbar-button:single-button:horizontal:increment {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='5' height='8'%3E%3Cpath d='M0 0L5 4L0 8z' fill='%23000'/%3E%3C/svg%3E");
+  }
 }
 
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
+.pixel-art {
+  shape-rendering: crispEdges;
+  image-rendering: pixelated;
 }
-.live-dot {
-  animation: pulse-dot 1.8s ease-in-out infinite;
+
+/* pixel-styled charts */
+.retro-chart svg {
+  shape-rendering: crispEdges;
+}
+
+.blink {
+  animation: blink 1.2s steps(2, start) infinite;
+}
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
 }

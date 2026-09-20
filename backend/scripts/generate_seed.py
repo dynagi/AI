@@ -150,7 +150,24 @@ insert into public.financial_cycles
    income_total, other_inflow_total, refund_total, expense_total, transaction_count, status)
 values
 """
-    write("demo_cycles.sql", cycles_header + ",\n".join(rows) + "\non conflict (id) do nothing;\n")
+    target_rows = ",\n".join(
+        f"  ({q(uid('target', c.key))}, {q(USER_ID)}, {q(cycle_uid[c.key])}, 25000)" for c in result.cycles
+    )
+    targets_sql = f"""
+-- The user's own savings targets for the seeded cycles (Rs 25,000 each). The NEW cycle that starts when the
+-- September salary is credited has no target on purpose: FinPilot asks the user to set it (the live demo sets
+-- Rs {DEMO_SAVINGS_TARGET_TO_SET}).
+insert into public.monthly_savings_targets (id, user_id, financial_cycle_id, target_amount)
+values
+{target_rows}
+on conflict (financial_cycle_id) do nothing;
+
+update public.financial_cycles fc
+   set savings_target = t.target_amount
+  from public.monthly_savings_targets t
+ where t.financial_cycle_id = fc.id and fc.user_id = {q(USER_ID)};
+"""
+    write("demo_cycles.sql", cycles_header + ",\n".join(rows) + "\non conflict (id) do nothing;\n" + targets_sql)
 
     # ---------------------------------------------------------- demo_transactions.sql
     lines = []
@@ -197,24 +214,38 @@ values
 on conflict (user_id, recurring_group_id) do nothing;
 """)
 
-    # ------------------------------------------------------------- demo_targets.sql
-    target_rows = ",\n".join(
-        f"  ({q(uid('target', c.key))}, {q(USER_ID)}, {q(cycle_uid[c.key])}, 25000)" for c in result.cycles
-    )
-    write("demo_targets.sql", f"""-- demo_targets.sql
--- The user's own savings targets for the seeded cycles (Rs 25,000 each). The NEW cycle that starts
--- when the September salary is credited has no target on purpose: FinPilot asks the user to set it
--- (the live demo sets Rs {DEMO_SAVINGS_TARGET_TO_SET}).
+    # --------------------------------------------------------------- demo_goals.sql
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    ist = _tz(_td(hours=5, minutes=30))
+    goals = [
+        ("laptop", "New Laptop", "PURCHASE", 60000, 20000, "2027-03-31", "MEDIUM", _dt(2026, 4, 2, 10, 0, tzinfo=ist),
+         [(_dt(2026, 5, 10, 9, 30, tzinfo=ist), 5000), (_dt(2026, 7, 12, 9, 30, tzinfo=ist), 7000), (_dt(2026, 9, 5, 9, 30, tzinfo=ist), 8000)]),
+        ("emergency", "Emergency Fund", "EMERGENCY_FUND", 150000, 70000, "2027-06-30", "HIGH", _dt(2026, 3, 31, 12, 0, tzinfo=ist),
+         [(_dt(2026, m, 3, 9, 30, tzinfo=ist), 10000) for m in (3, 4, 5, 6, 7, 8, 9)]),
+    ]
+    goal_rows, contrib_rows = [], []
+    for key, name, gtype, target, current, tdate, prio, created, contribs in goals:
+        assert sum(a for _, a in contribs) == current, key
+        gid = uid("goal", key)
+        goal_rows.append(f"  ({q(gid)}, {q(USER_ID)}, {q(name)}, {q(gtype)}, {target}, {current}, {q(tdate)}, {q(prio)}, 'ACTIVE', {q(created)})")
+        for i, (ts, amount) in enumerate(contribs):
+            contrib_rows.append(f"  ({q(uid('contrib', f'{key}-{i}'))}, {q(gid)}, {q(USER_ID)}, {amount}, {q(ts)}, 'seed', {q('Seeded contribution')})")
+    write("demo_goals.sql", """-- demo_goals.sql
+-- Long-term goals (separate from the per-cycle savings target and from category budgets):
+--   * New Laptop      Rs 20,000 of Rs 60,000 by 31 Mar 2027   (about Rs 6,667 per month needed from 30 Sep 2026)
+--   * Emergency Fund  Rs 70,000 of Rs 1,50,000 by 30 Jun 2027 (46.7% complete)
+-- Contributions raise the goal's current_amount only; they are not expenses and never touch the ledger.
 
-insert into public.monthly_savings_targets (id, user_id, financial_cycle_id, target_amount)
+insert into public.financial_goals
+  (id, user_id, name, goal_type, target_amount, current_amount, target_date, priority, status, created_at)
 values
-{target_rows}
-on conflict (financial_cycle_id) do nothing;
+""" + ",\n".join(goal_rows) + """
+on conflict (id) do nothing;
 
-update public.financial_cycles fc
-   set savings_target = t.target_amount
-  from public.monthly_savings_targets t
- where t.financial_cycle_id = fc.id and fc.user_id = {q(USER_ID)};
+insert into public.goal_contributions (id, goal_id, user_id, amount, "timestamp", source, notes)
+values
+""" + ",\n".join(contrib_rows) + """
+on conflict (id) do nothing;
 """)
 
     # ------------------------------------------------------------- demo_budgets.sql

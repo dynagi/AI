@@ -23,7 +23,7 @@ interface Comparison {
   top_decreases: Change[];
   explanation: string[];
 }
-interface Resp { cycles: { id: string; label: string; status: string }[]; comparison: Comparison | null; message?: string }
+interface Resp { goals?: { name: string; progress_percent: number; current_amount: Money; target_amount: Money }[]; cycles: { id: string; label: string; status: string }[]; comparison: Comparison | null; message?: string }
 
 function Row({ label, a, b, delta, deltaTone }: { label: string; a: string; b: string; delta?: string; deltaTone?: "up" | "down" }) {
   return (
@@ -138,6 +138,47 @@ export default function ComparisonsPage() {
               )}
             </CardContent>
           </Card>
+
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader><CardTitle>Recurring payments in each cycle</CardTitle></CardHeader>
+              <CardContent className="space-y-1 text-sm">
+                {[c.a, c.b].map((cy) => (
+                  <div key={cy.id} className="mb-2">
+                    <p className="text-xs font-medium text-muted-foreground">{cy.label}: {inr(cy.recurring_expenses.total)}</p>
+                    {(cy.recurring_expenses.items ?? []).length === 0 && <p className="text-xs text-muted-foreground">None yet.</p>}
+                    {(cy.recurring_expenses.items ?? []).map((i) => <div key={i.merchant} className="flex justify-between"><span>{i.merchant}</span><span className="tabular-nums">{inr(i.total)}</span></div>)}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>Budget usage</CardTitle></CardHeader>
+              <CardContent className="space-y-1 text-sm">
+                {(c.a.budget_usage ?? []).length === 0 && <p className="text-muted-foreground">No category budgets are set.</p>}
+                {(c.a.budget_usage ?? []).map((u, i) => {
+                  const bu = c.b.budget_usage?.[i];
+                  return (
+                    <div key={u.category} className="flex justify-between gap-2">
+                      <span>{u.category} <span className="text-xs text-muted-foreground">of {inr(u.budget)}</span></span>
+                      <span className="tabular-nums text-muted-foreground">{Math.round(u.percent_used)}% → {bu ? `${Math.round(bu.percent_used)}%` : "n/a"}</span>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          </div>
+          {(data?.goals ?? []).length > 0 && (
+            <Card>
+              <CardHeader><CardTitle>Goal progress (as of now)</CardTitle></CardHeader>
+              <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+                {data!.goals!.map((g) => (
+                  <div key={g.name}><p className="font-medium">{g.name}</p><p className="text-xs text-muted-foreground">{g.progress_percent.toFixed(1)}% complete · {inr(g.current_amount)} of {inr(g.target_amount)}</p></div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid gap-4 md:grid-cols-2">
             <Card>

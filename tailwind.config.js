@@ -1,6 +1,5 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: ["class"],
   content: ["./src/app/**/*.{ts,tsx}", "./src/components/**/*.{ts,tsx}"],
   theme: {
     extend: {
@@ -17,9 +16,19 @@ module.exports = {
         positive: "hsl(var(--positive))",
         negative: "hsl(var(--negative))",
         warning: "hsl(var(--warning))",
+        // fixed retro palette
+        mint: { DEFAULT: "#B8F0CF", accent: "#7FE3B5" },
+        lavender: { DEFAULT: "#B79AEF", dark: "#A98BE8", light: "#D9C9F7" },
+        cream: "#FFF29A",
+        win: { DEFAULT: "#E8E8E8", light: "#F5F5F5" },
       },
-      borderRadius: { lg: "var(--radius)", md: "calc(var(--radius) - 2px)", sm: "calc(var(--radius) - 4px)" },
-      fontFamily: { sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"] },
+      borderRadius: { lg: "0", md: "0", sm: "0" },
+      fontFamily: {
+        sans: ["var(--font-mono)", "Courier New", "monospace"],
+        mono: ["var(--font-mono)", "Courier New", "monospace"],
+        pixel: ["var(--font-pixel)", "var(--font-mono)", "monospace"],
+        vt: ["var(--font-vt)", "var(--font-mono)", "monospace"],
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

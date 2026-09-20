@@ -10,11 +10,14 @@ import psycopg
 
 from app.services import queries
 from app.services.alerts import list_alerts
-from app.services.budgets import budget_status
+from app.services.cashflow_risk import check_upcoming_financial_risk
+from app.services.budgets import budget_commitments, budget_status
 from app.services.comparison import cycle_summary, progress_vs_previous
 from app.services.cycle_state import as_of, savings_progress_for
+from app.services.goals import goals_overview
 from app.services.insights import list_insights
 from app.services.recurring import list_recurring
+from app.services.summaries import list_summaries, open_actions
 
 
 def upcoming_obligations(conn: psycopg.Connection, user_id: str, account_id: str, within_days: int = 30) -> dict:
@@ -82,5 +85,16 @@ def build_dashboard(conn: psycopg.Connection, user_id: str, account_id: Optional
         "monthly_total": sum((r["average_amount"] for r in recurring if r["frequency"] == "monthly"), Decimal("0")),
     }
     out["upcoming_obligations"] = upcoming_obligations(conn, user_id, aid)
+    out["cashflow_risk"] = check_upcoming_financial_risk(conn, user_id, aid)
     out["recent_transactions"] = queries.list_transactions(conn, user_id, account_id=aid, limit=12)
+
+    goals = goals_overview(conn, user_id, aid)
+    out["goals"] = goals["goals"]
+    out["goals_combined"] = goals["combined"]
+    out["commitments"] = budget_commitments(conn, user_id, aid)
+    summaries = list_summaries(conn, user_id)
+    out["latest_summary"] = (
+        {"id": str(summaries[0]["id"]), "title": summaries[0]["title"], "is_final": summaries[0]["is_final"]} if summaries else None
+    )
+    out["open_action_count"] = len(open_actions(conn, user_id, limit=100))
     return out

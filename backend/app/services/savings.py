@@ -54,6 +54,7 @@ class SavingsProgress:
     projected_savings: Decimal
     projection_basis: str  # "recent_cycles" | "current_spend_only"
     message: str
+    capacity_message: str = ""
 
     def as_dict(self) -> dict:
         return {k: (str(v) if isinstance(v, Decimal) else v) for k, v in self.__dict__.items()}
@@ -159,9 +160,19 @@ def compute_savings_progress(
             f"{inr(target)}. {inr(remaining)} of spending capacity remains."
         )
 
+    if remaining >= 0:
+        capacity_message = (
+            f"You have {inr(remaining)} of spending capacity remaining if you want to maintain your {inr(target)} savings target."
+        )
+    else:
+        capacity_message = (
+            f"You are {inr(-remaining)} over the spending level that keeps your {inr(target)} savings target within reach."
+        )
+
     return SavingsProgress(
         status=status, reason=reason, target=target, planned_spend_limit=limit,
-        remaining_spend_capacity=remaining, required_more_savings=required_more, message=message, **base,
+        remaining_spend_capacity=remaining, required_more_savings=required_more, message=message,
+        capacity_message=capacity_message, **base,
     )
 
 

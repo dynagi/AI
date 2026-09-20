@@ -1,4 +1,4 @@
--- 008_recurring_payments.sql
+-- 010_recurring_payments.sql
 -- Recurring payments detected from real transaction history (never invented).
 
 create table if not exists public.recurring_payments (

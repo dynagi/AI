@@ -3,18 +3,20 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
+// Classic beveled Windows button: raised by default, inset while pressed (handled by .retro-bevel in globals.css).
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap font-mono text-[13px] font-semibold text-black disabled:pointer-events-none disabled:opacity-60",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border",
-        outline: "border border-input bg-transparent hover:bg-secondary",
-        ghost: "hover:bg-secondary",
-        destructive: "bg-negative/15 text-negative hover:bg-negative/25 border border-negative/30",
+        default: "retro-bevel",
+        secondary: "retro-bevel",
+        outline: "retro-bevel bg-white",
+        yellow: "retro-bevel bg-cream hover:bg-[#fff7b8]",
+        ghost: "border-2 border-transparent bg-transparent hover:border-black hover:bg-white/70",
+        destructive: "retro-bevel bg-[#FF3333] text-white hover:bg-[#ff5555]",
       },
-      size: { default: "h-10 px-4 py-2", sm: "h-8 px-3 text-xs", lg: "h-11 px-6" },
+      size: { default: "h-9 px-4", sm: "h-7 px-2.5 text-xs", lg: "h-11 px-6 text-sm" },
     },
     defaultVariants: { variant: "default", size: "default" },
   },

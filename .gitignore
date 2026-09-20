@@ -14,3 +14,4 @@ __pycache__
 .DS_Store
 npm-debug.log*
 tsconfig.tsbuildinfo
+.next-test

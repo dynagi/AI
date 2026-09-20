@@ -174,7 +174,7 @@ def test_consent_can_be_rejected_and_aa_sandbox_is_inactive_without_credentials(
 
 def test_chat_without_llm_key_fails_gracefully_and_keeps_the_question(client):
     r = client.post("/chat", headers=H(), json={"message": "How much have I spent this month?"})
-    assert r.status_code == 503 and "temporarily unavailable" in r.json()["detail"]
+    assert r.status_code == 503 and "GEMINI_API_KEY" in r.json()["detail"] and "financial data is safe" in r.json()["detail"]
     convs = client.get("/chat/conversations", headers=H()).json()["conversations"]
     assert convs  # the conversation and the user's message were saved
     msgs = client.get(f"/chat/conversations/{convs[0]['id']}", headers=H()).json()["messages"]
@@ -207,3 +207,22 @@ def test_budget_flow(client):
     food = next(x for x in status if x["category"] == "Food")
     assert float(food["amount"]) == 5000 and food["percent_used"] > 100
     assert client.delete(f"/budgets/{b['id']}", headers=H()).status_code == 200
+
+
+@pytest.mark.parametrize("kind,status,fragment", [
+    ("rate_limit", 429, "quota"),
+    ("not_configured", 503, "GEMINI_API_KEY"),
+    ("model_not_found", 503, "GEMINI_MODEL"),
+    ("auth", 503, "rejected"),
+    ("unavailable", 503, "temporarily unavailable"),
+])
+def test_chat_reports_why_the_ai_is_unavailable(client, monkeypatch, kind, status, fragment):
+    from app.agent.llm import LLMUnavailable
+    import app.api.routes as routes
+
+    def boom(*a, **k):
+        raise LLMUnavailable("x", kind=kind)
+
+    monkeypatch.setattr(routes, "run_agent", boom)
+    r = client.post("/chat", headers=H(), json={"message": "hi"})
+    assert r.status_code == status and fragment in r.json()["detail"] and "financial data is safe" in r.json()["detail"]

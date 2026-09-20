@@ -1,4 +1,4 @@
--- 009_financial_insights.sql
+-- 011_financial_insights.sql
 -- Observations shown on the dashboard. Every insight carries `evidence`
 -- (the numbers and transaction ids it was computed from) so nothing is shown
 -- without supporting data.

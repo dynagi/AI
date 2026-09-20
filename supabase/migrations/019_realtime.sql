@@ -1,4 +1,4 @@
--- 015_realtime.sql
+-- 019_realtime.sql
 -- Publish ledger tables through Supabase Realtime so the dashboard updates the
 -- moment a transaction is written, with no page refresh.
 --
@@ -12,6 +12,10 @@ alter table public.financial_accounts  replica identity full;
 alter table public.financial_cycles    replica identity full;
 alter table public.agent_alerts        replica identity full;
 alter table public.financial_insights  replica identity full;
+alter table public.financial_goals     replica identity full;
+alter table public.goal_contributions  replica identity full;
+alter table public.monthly_summaries   replica identity full;
+alter table public.monthly_summary_actions replica identity full;
 
 do $$
 declare
@@ -20,7 +24,8 @@ begin
   if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
     foreach t in array array[
       'transactions', 'financial_accounts', 'financial_cycles',
-      'agent_alerts', 'financial_insights'
+      'agent_alerts', 'financial_insights', 'financial_goals', 'goal_contributions',
+      'monthly_summaries', 'monthly_summary_actions'
     ]
     loop
       if not exists (

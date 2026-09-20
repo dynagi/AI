@@ -13,6 +13,7 @@ sql_paths = [
   "./seed/demo_account.sql",
   "./seed/demo_cycles.sql",
   "./seed/demo_transactions.sql",
-  "./seed/demo_targets.sql",
+  "./seed/demo_goals.sql",
   "./seed/demo_budgets.sql",
+  "./seed/demo_summaries.sql",
 ]

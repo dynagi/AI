@@ -1,4 +1,4 @@
--- 006_monthly_savings_targets.sql
+-- 008_monthly_savings_targets.sql
 -- The savings target is chosen by the USER for a specific financial cycle.
 -- FinPilot never invents one and never silently carries one over.
 

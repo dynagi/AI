@@ -12,7 +12,8 @@ from tests.conftest import DEMO_ACCOUNT, DEMO_USER, make_user
 TABLES = [
     "financial_accounts", "transactions", "category_rules", "financial_cycles", "monthly_savings_targets",
     "budgets", "recurring_payments", "financial_insights", "agent_alerts", "agent_conversations",
-    "agent_messages", "data_sources", "consents",
+    "agent_messages", "data_sources", "consents", "financial_goals", "goal_contributions", "monthly_summaries",
+    "monthly_summary_actions",
 ]
 
 
@@ -80,7 +81,8 @@ def test_anon_role_has_no_access(conn):
 
 def test_realtime_publication_includes_the_ledger_tables(conn):
     tables = {r["tablename"] for r in conn.execute("select tablename from pg_publication_tables where pubname = 'supabase_realtime'").fetchall()}
-    assert {"transactions", "financial_accounts", "financial_cycles", "agent_alerts", "financial_insights"} <= tables
+    assert {"transactions", "financial_accounts", "financial_cycles", "agent_alerts", "financial_insights", "financial_goals",
+            "goal_contributions", "monthly_summaries", "monthly_summary_actions"} <= tables
 
 
 def test_sql_signed_amount_matches_the_python_engine(conn):
